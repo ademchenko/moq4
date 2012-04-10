@@ -48,104 +48,104 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Moq.Proxy
 {
-	internal class CastleProxyFactory : IProxyFactory
-	{
-		private static readonly ProxyGenerator generator = CreateProxyGenerator();
+    internal class CastleProxyFactory : IProxyFactory
+    {
+        private static readonly ProxyGenerator generator = CreateProxyGenerator();
 
-		[SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "By Design")]
-		static CastleProxyFactory()
-		{
+        [SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "By Design")]
+        static CastleProxyFactory()
+        {
 #pragma warning disable 618
-			AttributesToAvoidReplicating.Add<SecurityPermissionAttribute>();
+            AttributesToAvoidReplicating.Add<SecurityPermissionAttribute>();
 #pragma warning restore 618
 
 #if !SILVERLIGHT
-			AttributesToAvoidReplicating.Add<ReflectionPermissionAttribute>();
-			AttributesToAvoidReplicating.Add<PermissionSetAttribute>();
-			AttributesToAvoidReplicating.Add<System.Runtime.InteropServices.MarshalAsAttribute>();
+            AttributesToAvoidReplicating.Add<ReflectionPermissionAttribute>();
+            AttributesToAvoidReplicating.Add<PermissionSetAttribute>();
+            AttributesToAvoidReplicating.Add<System.Runtime.InteropServices.MarshalAsAttribute>();
 #if !NET3x
-			AttributesToAvoidReplicating.Add<System.Runtime.InteropServices.TypeIdentifierAttribute>();
+            AttributesToAvoidReplicating.Add<System.Runtime.InteropServices.TypeIdentifierAttribute>();
 #endif
 #endif
-		}
+        }
 
-		public T CreateProxy<T>(ICallInterceptor interceptor, Type[] interfaces, object[] arguments)
-		{
-			var mockType = typeof(T);
+        public T CreateProxy<T>(ICallInterceptor interceptor, Type[] interfaces, object[] arguments)
+        {
+            var mockType = typeof(T);
 
-			if (mockType.IsInterface)
-			{
-				return (T)generator.CreateInterfaceProxyWithoutTarget(mockType, interfaces, new Interceptor(interceptor));
-			}
+            if (mockType.IsInterface)
+            {
+                return (T)generator.CreateInterfaceProxyWithoutTarget(mockType, interfaces, new Interceptor(interceptor));
+            }
 
-			try
-			{
-				return (T)generator.CreateClassProxy(mockType, interfaces, new ProxyGenerationOptions(), arguments, new Interceptor(interceptor));
-			}
-			catch (TypeLoadException e)
-			{
-				throw new ArgumentException(Resources.InvalidMockClass, e);
-			}
-			catch (MissingMethodException e)
-			{
-				throw new ArgumentException(Resources.ConstructorNotFound, e);
-			}
-		}
+            try
+            {
+                return (T)generator.CreateClassProxy(mockType, interfaces, new ProxyGenerationOptions(), arguments, new Interceptor(interceptor));
+            }
+            catch (TypeLoadException e)
+            {
+                throw new ArgumentException(Resources.InvalidMockClass, e);
+            }
+            catch (InvalidProxyConstructorArgumentsException e)
+            {
+                throw new ArgumentException(Resources.ConstructorNotFound, e);
+            }
+        }
 
-		private static ProxyGenerator CreateProxyGenerator()
-		{
-			return new ProxyGenerator();
-		}
+        private static ProxyGenerator CreateProxyGenerator()
+        {
+            return new ProxyGenerator();
+        }
 
-		private class Interceptor : IInterceptor
-		{
-			private ICallInterceptor interceptor;
+        private class Interceptor : IInterceptor
+        {
+            private ICallInterceptor interceptor;
 
-			internal Interceptor(ICallInterceptor interceptor)
-			{
-				this.interceptor = interceptor;
-			}
+            internal Interceptor(ICallInterceptor interceptor)
+            {
+                this.interceptor = interceptor;
+            }
 
-			public void Intercept(IInvocation invocation)
-			{
-				this.interceptor.Intercept(new CallContext(invocation));
-			}
-		}
+            public void Intercept(IInvocation invocation)
+            {
+                this.interceptor.Intercept(new CallContext(invocation));
+            }
+        }
 
-		private class CallContext : ICallContext
-		{
-			private IInvocation invocation;
+        private class CallContext : ICallContext
+        {
+            private IInvocation invocation;
 
-			internal CallContext(IInvocation invocation)
-			{
-				this.invocation = invocation;
-			}
+            internal CallContext(IInvocation invocation)
+            {
+                this.invocation = invocation;
+            }
 
-			public object[] Arguments
-			{
-				get { return this.invocation.Arguments; }
-			}
+            public object[] Arguments
+            {
+                get { return this.invocation.Arguments; }
+            }
 
-			public MethodInfo Method
-			{
-				get { return this.invocation.Method; }
-			}
+            public MethodInfo Method
+            {
+                get { return this.invocation.Method; }
+            }
 
-			public object ReturnValue
-			{
-				get { return this.invocation.ReturnValue; }
-				set { this.invocation.ReturnValue = value; }
-			}
+            public object ReturnValue
+            {
+                get { return this.invocation.ReturnValue; }
+                set { this.invocation.ReturnValue = value; }
+            }
 
-			public void InvokeBase()
-			{
-				this.invocation.Proceed();
-			}
+            public void InvokeBase()
+            {
+                this.invocation.Proceed();
+            }
 
-			public void SetArgumentValue(int index, object value)
-			{
-				this.invocation.SetArgumentValue(index, value);
-			}
-		}
-	}
+            public void SetArgumentValue(int index, object value)
+            {
+                this.invocation.SetArgumentValue(index, value);
+            }
+        }
+    }
 }
