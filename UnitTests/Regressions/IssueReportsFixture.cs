@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using Moq;
+using Moq.Language;
 using Moq.Properties;
 using Moq.Protected;
 using Xunit;
@@ -1620,6 +1621,72 @@ namespace Moq.Tests.Regressions
 
 		#endregion
 
+        public class NullReferenceExceptionOnQueryableMocks
+        {
+            [Fact]
+            public void Reproduce()
+            {
+                IQueryable<IOuter> target = from m in Mocks.Of<IOuter>()
+                             where m.Inner.Id == Guid.Empty
+                             select m;
+
+                IOuter first = target.First();
+                first.Inner.Id = Guid.NewGuid();
+                var mock = Mock.Get(first);
+                mock.VerifySet(m => m.Inner = null);
+
+                
+            }
+
+            [Fact]
+            public void Reproduce1()
+            {
+                var outer = new Mock<IOuter>(MockBehavior.Strict);
+                outer.SetupSet(o => o.Inner.Id = Guid.Empty).Verifiable();
+
+                //outer.Object.Inner.Id = Guid.Empty;
+
+                outer.VerifySet(o => o.Inner.Id = Guid.Empty, Times.Never());
+
+                //outer.Object.Inner.Id = Guid.Empty;
+
+                //outer.VerifySet(o => o.Inner.Id = Guid.NewGuid());
+
+                //outer.Object.Inner = null;
+
+                outer.VerifyAll();
+            }
+
+            [Fact]
+            public void Reproduce2()
+            {
+                var outer = new Mock<IOuter>(MockBehavior.Strict);
+                outer.SetupSet(o => o.Inner.Id = Guid.Empty).Verifiable();
+
+                //outer.Object.Inner.Id = Guid.Empty;
+
+                outer.VerifySet(o => o.Inner.Id = Guid.Empty, Times.Never());
+
+                //outer.Object.Inner.Id = Guid.Empty;
+
+                //outer.VerifySet(o => o.Inner.Id = Guid.NewGuid());
+
+                //outer.Object.Inner = null;
+
+                outer.VerifyAll();
+            }
+
+            public interface IOuter
+            {
+                IInner Inner { get; set; }
+            }
+
+            public interface IInner
+            {
+                Guid Id { get; set; }
+            }
+        }
+
 		#region Silverlight excluded
 
 #if !SILVERLIGHT
@@ -1707,12 +1774,12 @@ namespace Moq.Tests.Regressions
 		{
 #if DEBUG
 			// On release mode, castle is ILMerged into Moq.dll and this won't compile
-			var generator = new Castle.DynamicProxy.ProxyGenerator();
-			var proxy = generator.CreateClassProxy<ServiceImplementation>();
-			using (var host = new WebServiceHost(proxy, new Uri("http://localhost:7777")))
-			{
-				host.Open();
-			}
+            //var generator = new Castle.DynamicProxy.ProxyGenerator();
+            //var proxy = generator.CreateClassProxy<ServiceImplementation>();
+            //using (var host = new WebServiceHost(proxy, new Uri("http://localhost:7777")))
+            //{
+            //    host.Open();
+            //}
 #endif
 		}
 

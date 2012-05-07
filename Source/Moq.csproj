@@ -90,7 +90,6 @@
     <Compile Include="Linq\Mock.cs" />
     <Compile Include="Linq\MockRepository.cs" />
     <Compile Include="Linq\MockSetupsBuilder.cs" />
-    <Compile Include="Linq\QueryableMockExtensions.cs" />
     <Compile Include="Matchers\ExpressionComparer.cs" />
     <Compile Include="Matchers\ExpressionMatcher.cs" />
     <Compile Include="MatchExpression.cs" />
